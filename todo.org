@@ -1,0 +1,6 @@
+* Todo
+** TODO 閱讀規範
+** TODO 閱讀程式碼
+** TODO 撰寫程式碼
+** TODO 測試
+** TODO 繳交作業
