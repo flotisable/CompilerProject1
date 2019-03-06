@@ -5,5 +5,8 @@
    :END:
 ** TODO 閱讀程式碼
 ** TODO 撰寫程式碼
+*** TODO 新增乘法與除法
+*** TODO 接受多字元變數
+*** TODO constant folding
 ** TODO 測試
 ** TODO 繳交作業
