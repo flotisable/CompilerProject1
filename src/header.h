@@ -111,6 +111,8 @@ typedef struct SymbolTable{
     DataType table[26];
 } SymbolTable;
 
+int isConstValue( Expression *expr );
+
 
 Token getNumericToken( FILE *source, char c );
 Token scanner( FILE *source );
@@ -118,6 +120,9 @@ Declaration makeDeclarationNode( Token declare_type, Token identifier );
 Declarations *makeDeclarationTree( Declaration decl, Declarations *decls );
 Declaration parseDeclaration( FILE *source, Token token );
 Declarations *parseDeclarations( FILE *source );
+int constantFoldingInt( int left, int right, ValueType op );
+float constantFoldingFloat( float left, float right, ValueType op );
+Expression *constantFolding( Expression *expr );
 Expression *parseValue( FILE *source );
 Expression *parseMulDivExpressionTail( FILE *source, Expression *lvalue );
 Expression *parseExpressionTail( FILE *source, Expression *lvalue );

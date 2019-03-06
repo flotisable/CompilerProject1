@@ -38,6 +38,17 @@ int main( int argc, char *argv[] )
     return 0;
 }
 
+int isConstValue( Expression *expr )
+{
+  switch( (expr->v).type )
+  {
+    case IntConst:
+    case FloatConst:
+      return 1;
+    default:
+      return 0;
+  }
+}
 
 /********************************************* 
   Scanning 
@@ -184,6 +195,69 @@ Declarations *parseDeclarations( FILE *source )
     }
 }
 
+int constantFoldingInt( int left, int right, ValueType op )
+{
+  switch( op )
+  {
+    case PlusNode:  return left + right;
+    case MinusNode: return left - right;
+    case MulNode:   return left * right;
+    case DivNode:   return left / right;
+    default:
+      printf("Constant Folding OP Error! OP: %i\n", op);
+      exit(1);
+  }
+}
+
+float constantFoldingFloat( float left, float right, ValueType op )
+{
+  switch( op )
+  {
+    case PlusNode:  return left + right;
+    case MinusNode: return left - right;
+    case MulNode:   return left * right;
+    case DivNode:   return left / right;
+    default:
+      printf("Constant Folding OP Error! OP: %i\n", op);
+      exit(1);
+  }
+}
+
+Expression *constantFolding( Expression *expr )
+{
+  if( !isConstValue( expr->leftOperand ) ||
+      !isConstValue( expr->rightOperand ) )
+    return expr;
+
+  Expression *left  = expr->leftOperand;
+  Expression *right = expr->rightOperand;
+
+  expr->leftOperand = expr->rightOperand = NULL;
+
+  switch( generalize( left, right ) )
+  {
+    case Int:
+      (expr->v).val.ivalue = constantFoldingInt(  (left->v).val.ivalue,
+                                                  (right->v).val.ivalue,
+                                                  (expr->v).type );
+      (expr->v).type = IntConst;
+      break;
+    case Float:
+      (expr->v).val.fvalue = constantFoldingFloat(  (left->v).val.ivalue,
+                                                    (right->v).val.ivalue,
+                                                    (expr->v).type );
+      (expr->v).type = FloatConst;
+      break;
+    default:
+      printf("Constant Folding Type Error!\n");
+      exit(1);
+  }
+  free(left);
+  free(right);
+
+  return expr;
+}
+
 Expression *parseValue( FILE *source )
 {
     Token token = scanner(source);
@@ -223,6 +297,7 @@ Expression *parseMulDivExpressionTail( FILE *source, Expression *lvalue )
             (expr->v).val.op = Mul;
             expr->leftOperand = lvalue;
             expr->rightOperand = parseValue(source);
+            expr = constantFolding(expr);
             return parseMulDivExpressionTail(source, expr);
         case DivOp:
             expr = (Expression *)malloc( sizeof(Expression) );
@@ -230,6 +305,7 @@ Expression *parseMulDivExpressionTail( FILE *source, Expression *lvalue )
             (expr->v).val.op = Div;
             expr->leftOperand = lvalue;
             expr->rightOperand = parseValue(source);
+            expr = constantFolding(expr);
             return parseMulDivExpressionTail(source, expr);
         case PlusOp:
         case MinusOp:
@@ -257,6 +333,7 @@ Expression *parseExpressionTail( FILE *source, Expression *lvalue )
             (expr->v).val.op = Plus;
             expr->leftOperand = lvalue;
             expr->rightOperand = parseMulDivExpressionTail(source, parseValue(source));
+            expr = constantFolding(expr);
             return parseExpressionTail(source, expr);
         case MinusOp:
             expr = (Expression *)malloc( sizeof(Expression) );
@@ -264,6 +341,7 @@ Expression *parseExpressionTail( FILE *source, Expression *lvalue )
             (expr->v).val.op = Minus;
             expr->leftOperand = lvalue;
             expr->rightOperand = parseMulDivExpressionTail(source, parseValue(source));
+            expr = constantFolding(expr);
             return parseExpressionTail(source, expr);
         case Alphabet:
         case PrintOp:
@@ -289,12 +367,14 @@ Expression *parseExpression( FILE *source, Expression *lvalue )
             (expr->v).val.op = Plus;
             expr->leftOperand = lvalue;
             expr->rightOperand = parseMulDivExpressionTail(source, parseValue(source));
+            expr = constantFolding(expr);
             return parseExpressionTail(source, expr);
         case MinusOp:
             expr = (Expression *)malloc( sizeof(Expression) );
             (expr->v).type = MinusNode;
             (expr->v).val.op = Minus;
             expr->leftOperand = lvalue;
+            expr = constantFolding(expr);
             expr->rightOperand = parseMulDivExpressionTail(source, parseValue(source));
             return parseExpressionTail(source, expr);
         case Alphabet:
