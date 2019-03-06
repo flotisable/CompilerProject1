@@ -7,7 +7,7 @@ ifeq "${OS}" "Windows_NT"
 PROG := ${PROG}.exe
 endif
 
-.PHONY: all tags clean
+.PHONY: all ${PROG} tags clean
 
 all: ${PROG}
 
